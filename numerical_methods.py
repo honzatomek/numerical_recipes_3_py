@@ -201,17 +201,15 @@ class Matrix:
 class LinAlg:
   @staticmethod
   def swap_rows(A, r1=0, r2=0):
-    R = Matrix.eye(size=(A.nrows,A.ncols))
-    if type(r1) == int and type(r2) == int:
-      r1 = [r1]
-      r2 = [r2]
-    if type(r1) == list and type(r2) == list and len(r1) == len(r2):
-      for i in range(len(r1)):
-        R[r1[i],r1[i]] = 0.0
-        R[r2[i],r2[i]] = 0.0
-        R[r1[i],r2[i]] = 1.0
-        R[r2[i],r1[i]] = 1.0
+    R = Matrix.permutation(size=(A.nrows,A.ncols), index1=r1, index2=r2)
       A = R * A
+    else:
+      raise ValueError('row indexes must be of same length')
+
+  @staticmethod
+  def swap_cols(A, c1=0, c2=0):
+    R = Matrix.permutation(size=(A.nrows,A.ncols), index1=c1, index2=c2)
+      A = A * R
     else:
       raise ValueError('row indexes must be of same length')
 
