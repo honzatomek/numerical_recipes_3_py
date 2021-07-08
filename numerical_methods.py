@@ -2,46 +2,6 @@
 
 from copy import deepcopy
 
-class Vector:
-  def __init_(self, size=0, value=0):
-    self.__size = size
-    self.__items = list()
-    if self.__size > 0:
-      if type(self.value) == list:
-        self.__items = [value[i] for i in range(self.__size)]
-      else:
-        self.__items == [value for i in range(self.__size)]
-
-  @property
-  def size(self):
-    return self.__size
-
-  @size.setter
-  def size(self, new_size):
-    self.__size = new_size
-    self.__items = [0.0 for i in range(self.__size)]
-
-  def __getitem__(self, index):
-    return self.__items[index]
-
-  def __setitem__(self, index, new_value):
-    if type(index) == slice:
-      if type(new_value) == list:
-        for i in range(index):
-          self.__items[i] = new_value[i]
-      else:
-        if type(new_value) == list:
-          j = 0
-          for i in range(index):
-            self.__items[i] = new_value[j]
-            j += 1
-        else:
-          for i in range(index):
-            self.__items[i] = new_value
-    else:
-      self.__items[index] = new_value
-
-
 class Matrix:
   @classmethod
   def eye(cls, size=0, type=float):
@@ -146,7 +106,7 @@ class Matrix:
 
   def __mul__(self, B):
     A = self
-    if type(B) == int or type(B) == double:
+    if type(B) == int or type(B) == float:
       C = self.__class__(size=(A.nrows,A.ncols), value=0.0)
       for i in range(A.nrows):
         for j in range(A.ncols):
@@ -154,7 +114,7 @@ class Matrix:
       return C
     if A.ncols == B.nrows:
       C = self.__class__(size=(A.nrows,B.ncols), value=0.0)
-      for i in range(A.rows):
+      for i in range(A.nrows):
         for j in range(A.ncols):
           for k in range(B.ncols):
             C[i,k] += A[i,j] * B[j,k]
@@ -182,6 +142,18 @@ class Matrix:
 
   def __imul__(self, B):
     return self.__mul__(B)
+
+  def __str__(self):
+    retval = ''
+    for i in range(self.__n):
+      for j in range(self.__m):
+        retval += '{0:12.5f}'.format(self[i,j])
+      retval += '\n'
+    retval = retval[0:-1]
+    return retval
+
+  def __repr__(self):
+    return 'Matrix, rows = {0:n}, columns{1:n}'.format(self.__n, self.__m)
 
   def swap_rows(self, i, j):
     for k in range(self.__m):
@@ -286,17 +258,23 @@ class LinAlg:
 if __name__ == '__main__':
   a = Matrix(3, 0.0)
   a = Matrix.eye(3)
-  for i in range(a.nrows):
-    for j in range(a.ncols):
-      print(a[i,j])
+  print('a = \n{0}\n'.format(a))
+  # for i in range(a.nrows):
+  #   for j in range(a.ncols):
+  #     print(a[i,j])
 
   # gauss-jordan
   a = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
-  for i in range(a.nrows):
-    for j in range(a.ncols):
-      print(a[i,j])
+  b = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
+  print('a = \n{0}\n'.format(a))
+  # for i in range(a.nrows):
+  #   for j in range(a.ncols):
+  #     print(a[i,j])
   LinAlg.gauss_jordan_full_pivot(a)
-  for i in range(a.nrows):
-    for j in range(a.ncols):
-      print(a[i,j])
+  print('a = \n{0}\n'.format(a))
+  # for i in range(a.nrows):
+  #   for j in range(a.ncols):
+  #     print(a[i,j])
+  print('a * a-1 =\n{0}\n'.format(b * a))
+
 
