@@ -15,6 +15,22 @@ class Matrix:
           values[i].append(type(0.0))
     return cls(values)
 
+  @classmethod
+  def permutation(size=0, index1=0, index2=0):
+    R = self.__class__.eye(size=size)
+    if type(index1) == int and type(index2) == int:
+      index1 = [index1]
+      index2 = [index2]
+    if type(index1) == list and type(index2) == list and len(index1) == len(index2):
+      for i in range(len(index1)):
+        R[index1[i],index1[i]] = 0.0
+        R[index2[i],index2[i]] = 0.0
+        R[index1[i],index2[i]] = 1.0
+        R[index2[i],index1[i]] = 1.0
+      return R
+    else:
+      raise ValueError('indexes must be of the same length')
+
   def __init__(self, size=0, value=None):
     self.__items = list()
     if type(size) == list and value is None:
