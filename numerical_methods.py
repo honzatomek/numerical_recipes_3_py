@@ -279,6 +279,17 @@ class LinAlg:
         x[i,k] /= a[i,i]
     return x
 
+  @staticmethod
+  def forwardsubstitution(A, b):
+    x = Matrix(size=(b.nrows, b.ncols), value=0.0)
+    for i in range(A.nrows):
+      for k in range(b.ncols):
+        x[i,k] = b[i,k]
+        for j in range(i):
+          x[i,k] -= a[i,j] * x[j,k]
+        x[i,k] /= a[i,i]
+    return x
+
 if __name__ == '__main__':
   a = Matrix(3, 0.0)
   a = Matrix.eye(3)
