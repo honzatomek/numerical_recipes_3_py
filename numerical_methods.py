@@ -350,6 +350,23 @@ class LUdecomposition:
         for j in range(k+1, n):
           self.__lu[i,j] -= tmp * self.__lu[k,j]
 
+  @property
+  def L(self):
+    l = Matrix.eye(size=self.__n)
+    for i in range(self.__n):
+      for j in range(i):
+        l[i,j] = self.__lu[i,j]
+    return l
+
+  @property
+  def U(self):
+    u = Matrix(size=self.__n, value=0.0)
+    for i in range(self.__n):
+      for j in range(i + 1, self.__n):
+        u[i,j] = self.__lu[i,j]
+    return u
+
+
 if __name__ == '__main__':
   a = Matrix(3, 0.0)
   a = Matrix.eye(3)
