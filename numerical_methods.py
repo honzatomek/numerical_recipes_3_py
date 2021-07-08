@@ -31,8 +31,9 @@ class Matrix:
     else:
       raise ValueError('indexes must be of the same length')
 
-  def __init__(self, size=0, value=None):
+  def __init__(self, size=0, value=None, type=float):
     self.__items = list()
+    self,__type = type
     if type(size) == list and value is None:
       if type(size[0]) != list:
         self.__n = 1
@@ -42,7 +43,12 @@ class Matrix:
         self.__n = len(size)
         self.__m = len(size[0])
         for i in range(self.__n):
-          self.__items.extend([size[i][j] for j in range(self.__m)])
+          self.__items.extend([self.__type(size[i][j]) for j in range(self.__m)])
+    elif type(size) == self.__class__:
+      self.__n = size.nrows
+      self.__m = size.ncols
+      for i in range(self.__n):
+        self.__items.extend(self.__type([size[i,j]) for j in range(self.__m)])
     else:
       if type(size) == int:
         self.__n = size
@@ -55,7 +61,7 @@ class Matrix:
       if value is None:
         value = 0.0
       for i in range(self.__n):
-        self.__items.extend([value for j in range(self.__m)])
+        self.__items.extend([self.__type(value) for j in range(self.__m)])
 
   @property
   def size(self):
@@ -74,7 +80,7 @@ class Matrix:
 
     self.__items = list()
     for i in range(self.__n):
-      self.__items.extend([0.0 for j in range(self.__m)])
+      self.__items.extend([self.__type(0.0) for j in range(self.__m)])
 
   @property
   def nrows(self):
@@ -289,6 +295,60 @@ class LinAlg:
           x[i,k] -= a[i,j] * x[j,k]
         x[i,k] /= a[i,i]
     return x
+
+class LUdecomposition:
+  def __init__(self, A):
+    self.__n = A.nrows
+    self.__lu = Matrix(size=A)
+    self.__d = 0.0
+    self.__indx = Matrix(size=(1,A.nrows), value=0.0)
+    self.__decompose()
+
+  @property
+  def lu(self):
+    return self.__lu
+
+  @lu.setter
+  def.lu(self, A):
+    self.__init__(A)
+
+  def __decompose(self):
+    TINY = 1.0e-40
+    imax = 0
+    big = 0.0
+    tmp = 0.0
+    vv = Matrix(size=(1, self.__n), value=0, type=float)
+    self.__d = 1.0
+    for i in range(self.__n):
+      big = 0.0
+      for j in range(n):
+        tmp = abs(self.__lu[i,j])
+        if tmp > big:
+          big = tmp
+        if big == 0.0:
+          raise ValueError('singular matrix')
+        vv[i] = 1.0 / big
+    for k in range(self.__n):
+      big = 0.0
+      for i in range(k, self.__n):
+        tmp = vv[i] * abs(self.__lu[i,k])
+        if tmp > big:
+          big = tmp
+          imax = i
+      if k != imax:
+        for j in range(n):
+          tmp = self.__lu[imax,j]
+          self.__lu[imax,j] = self.__lu[k,j]
+          self.__lu[k,j] = tmp
+          self.__d *= -1.0
+          vv[imax] = vv[k]
+      indx[k] = imax
+      if self.__lu[k, k] == 0.0:
+        self.__lu[k,k] = TINY
+      for i in range(k+1, self.__n):
+        tmp = self.__lu[i,] / self.__lu[k,k]
+        for j in range(k+1, n):
+          self.__lu[i,j] -= tmp * self.__lu[k,j]
 
 if __name__ == '__main__':
   a = Matrix(3, 0.0)
