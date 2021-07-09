@@ -352,7 +352,7 @@ class LUdecomposition:
           self.__lu[k,j] = tmp
           self.__d *= -1.0
           vv[imax] = vv[k]
-      self.__indx[k] = imax
+        self.__indx[k] = imax
       if self.__lu[k, k] == 0.0:
         self.__lu[k,k] = TINY
       for i in range(k+1, self.__n):
@@ -375,6 +375,56 @@ class LUdecomposition:
       for j in range(i, self.__n):
         u[i,j] = self.__lu[i,j]
     return u
+
+  @property
+  def rowindx(self):
+    return self.__indx
+
+  def solve(self, b, x=None):
+    ret = False
+    if x is None:
+      ret = True
+    x = deepcopy(b)
+
+    m = b.ncols
+    if b.nrows != self.__n or x.nrows != self.__n or b.ncols != x.ncols:
+      raise ValueError('LUdecomposition.solve: bad sizes')
+    for k in range(m):
+      ii = 0
+      ip = 0
+      sum = 0.0
+      for i in range(self.__n):
+        ip = self.__indx[i]
+        sum = x[ip,k]
+        x[ip,k]=x[i,k]
+        if ii != 0:
+          for j in range(ii-1,j):
+            sum -= self.__lu[i,j] * x[j,k]
+        elif sum != 0.0:
+          ii = i + 1
+        x[i,k] = sum
+      for i in range(self.__n, -1, -1):
+        sum = x[i,k]
+        for j in range(i+1, self.__n):
+          sum -= self.__lu[i,j] * x[j,k]
+        x[i,k] = sum / self.__lu[i,i]
+    if ret:
+      return x
+
+  def inverse(self, ainv=None):
+    ret = False
+    if ainv is None:
+      ret = True
+    ainv = Matrix.eye(size=self.__n, mytype=double)
+    self.solve(b=ainv, x=ainv)
+    if ret:
+      return ainv
+
+  def determinant(self):
+    dd = self.__d
+    for i in range(self.__n):
+      dd *= self.__lu[i,i]
+    return dd
 
 
 if __name__ == '__main__':
@@ -400,6 +450,6 @@ if __name__ == '__main__':
   print('a * a-1 =\n{0}\n'.format(b * a))
 
   lu = LUdecomposition(b)
-  print('l =\n{0}\nu =\n{1}\n'.format(lu.L, lu.U))
+  print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
 
 
