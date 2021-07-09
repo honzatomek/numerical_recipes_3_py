@@ -4,20 +4,20 @@ from copy import deepcopy
 
 class Matrix:
   @classmethod
-  def eye(cls, size=0, type=float):
+  def eye(cls, size=0, mytype=float):
     values = list()
     for i in range(size):
       values.append(list())
       for j in range(size):
         if i == j:
-          values[i].append(type(1.0))
+          values[i].append(mytype(1.0))
         else:
-          values[i].append(type(0.0))
-    return cls(values)
+          values[i].append(mytype(0.0))
+    return cls(values, mytype=mytype)
 
   @classmethod
   def permutation(size=0, index1=0, index2=0):
-    R = self.__class__.eye(size=size)
+    R = self.__class__.eye(size=size, mytype=float)
     if type(index1) == int and type(index2) == int:
       index1 = [index1]
       index2 = [index2]
@@ -31,12 +31,12 @@ class Matrix:
     else:
       raise ValueError('indexes must be of the same length')
 
-  def __init__(self, size=0, value=None, type=float):
+  def __init__(self, size=0, value=None, mytype=float):
     self.__items = list()
-    self,__type = type
+    self.__type = mytype
     if type(size) == list and value is None:
       if type(size[0]) != list:
-        self.__n = 1
+        self.__n = int(1)
         self.__m = len(size)
         self.__items = deepcopy(size)
       else:
@@ -48,16 +48,16 @@ class Matrix:
       self.__n = size.nrows
       self.__m = size.ncols
       for i in range(self.__n):
-        self.__items.extend(self.__type([size[i,j]) for j in range(self.__m)])
+        self.__items.extend([self.__type(size[i,j]) for j in range(self.__m)])
     else:
-      if type(size) == int:
-        self.__n = size
-        self.__m = size
+      if type(size) == int or type(size) == float:
+        self.__n = int(size)
+        self.__m = int(size)
       elif type(size) == tuple or type(size) == list:
-        self.__n = size[0]
-        self.__m = size[1]
+        self.__n = int(size[0])
+        self.__m = int(size[1])
       else:
-        raise ValueError('size must be an int or a tuple oe list of two ints')
+        raise ValueError('size must be an int or a tuple or list of two ints')
       if value is None:
         value = 0.0
       for i in range(self.__n):
@@ -207,14 +207,24 @@ class Matrix:
 class LinAlg:
   @staticmethod
   def swap_rows(A, r1=0, r2=0):
-    R = Matrix.permutation(size=(A.nrows,A.ncols), index1=r1, index2=r2)
+    if type(r1) == int:
+      r1 = [r1]
+    if type(r2) == int:
+      r2 = [r2]
+    if len(r1) == len(r2):
+      R = Matrix.permutation(size=(A.nrows,A.ncols), index1=r1, index2=r2)
       A = R * A
     else:
       raise ValueError('row indexes must be of same length')
 
   @staticmethod
   def swap_cols(A, c1=0, c2=0):
-    R = Matrix.permutation(size=(A.nrows,A.ncols), index1=c1, index2=c2)
+    if type(c1) == int:
+      c1 = [c1]
+    if type(c2) == int:
+      c2 = [c2]
+    if len(c1) == len(c2):
+      R = Matrix.permutation(size=(A.nrows,A.ncols), index1=c1, index2=c2)
       A = A * R
     else:
       raise ValueError('row indexes must be of same length')
@@ -301,7 +311,7 @@ class LUdecomposition:
     self.__n = A.nrows
     self.__lu = Matrix(size=A)
     self.__d = 0.0
-    self.__indx = Matrix(size=(1,A.nrows), value=0.0)
+    self.__indx = Matrix(size=(1,A.nrows), value=0.0, mytype=float)
     self.__decompose()
 
   @property
@@ -309,7 +319,7 @@ class LUdecomposition:
     return self.__lu
 
   @lu.setter
-  def.lu(self, A):
+  def lu(self, A):
     self.__init__(A)
 
   def __decompose(self):
@@ -317,11 +327,11 @@ class LUdecomposition:
     imax = 0
     big = 0.0
     tmp = 0.0
-    vv = Matrix(size=(1, self.__n), value=0, type=float)
+    vv = Matrix(size=(1, self.__n), value=0, mytype=float)
     self.__d = 1.0
     for i in range(self.__n):
       big = 0.0
-      for j in range(n):
+      for j in range(self.__n):
         tmp = abs(self.__lu[i,j])
         if tmp > big:
           big = tmp
@@ -336,18 +346,18 @@ class LUdecomposition:
           big = tmp
           imax = i
       if k != imax:
-        for j in range(n):
+        for j in range(self.__n):
           tmp = self.__lu[imax,j]
           self.__lu[imax,j] = self.__lu[k,j]
           self.__lu[k,j] = tmp
           self.__d *= -1.0
           vv[imax] = vv[k]
-      indx[k] = imax
+      self.__indx[k] = imax
       if self.__lu[k, k] == 0.0:
         self.__lu[k,k] = TINY
       for i in range(k+1, self.__n):
-        tmp = self.__lu[i,] / self.__lu[k,k]
-        for j in range(k+1, n):
+        tmp = self.__lu[i,k] / self.__lu[k,k]
+        for j in range(k+1, self.__n):
           self.__lu[i,j] -= tmp * self.__lu[k,j]
 
   @property
@@ -362,14 +372,14 @@ class LUdecomposition:
   def U(self):
     u = Matrix(size=self.__n, value=0.0)
     for i in range(self.__n):
-      for j in range(i + 1, self.__n):
+      for j in range(i, self.__n):
         u[i,j] = self.__lu[i,j]
     return u
 
 
 if __name__ == '__main__':
-  a = Matrix(3, 0.0)
-  a = Matrix.eye(3)
+  a = Matrix(size=int(3), value=0.0)
+  a = Matrix.eye(size=3)
   print('a = \n{0}\n'.format(a))
   # for i in range(a.nrows):
   #   for j in range(a.ncols):
@@ -388,5 +398,8 @@ if __name__ == '__main__':
   #   for j in range(a.ncols):
   #     print(a[i,j])
   print('a * a-1 =\n{0}\n'.format(b * a))
+
+  lu = LUdecomposition(b)
+  print('l =\n{0}\nu =\n{1}\n'.format(lu.L, lu.U))
 
 
