@@ -285,7 +285,10 @@ class LinAlg:
             b[ll,l] -= b[icol,l] * tmp
 
   @staticmethod
-  def backsubstitution(A, b):
+  def backsubstitution(A, b, x=None):
+    ret = False
+    if x is None:
+      ret = True
     x = Matrix(size=(b.nrows, b.ncols), value=0.0)
     for i in range(A.nrows - 1, -1, -1):
       for k in range(b.ncols):
@@ -293,10 +296,14 @@ class LinAlg:
         for j in range(i + 1, A.ncols):
           x[i,k] -= a[i,j] * x[j,k]
         x[i,k] /= a[i,i]
-    return x
+    if ret:
+      return x
 
   @staticmethod
-  def forwardsubstitution(A, b):
+  def forwardsubstitution(A, b, x=None):
+    ret = False
+    if x is None:
+      ret = True
     x = Matrix(size=(b.nrows, b.ncols), value=0.0)
     for i in range(A.nrows):
       for k in range(b.ncols):
@@ -304,7 +311,57 @@ class LinAlg:
         for j in range(i):
           x[i,k] -= a[i,j] * x[j,k]
         x[i,k] /= a[i,i]
-    return x
+    if ret:
+      return x
+
+  @staticmethod
+  def tridiag(A, b, x=None):
+    ret = False
+    if x is None:
+      ret = True
+    x = Matrix(size=(b.nrows, b.ncols), value=0.0)
+    n = A.nrows
+    bet = 0.0
+    gam = Matrix(size=(1,n), value=0.0, mytype=float)
+
+    if A[0,1] == 0.0:
+      raise ValueError('Error tridiag: 0 on diagonal A[0,0]')
+    bet = A[0,1]
+    for k in range(b.ncols):
+      x[0,k] = b[0,k] / bet
+    for j in range(1,n):
+      gam[j] = A[j-1,2] / bet
+      bet = A[j,1] - A[j,0] * gam[j]
+      if bet == 0.0:
+        raise ValueError('Error tridiag: zero pivot on row {0:n}'.format(j))
+      for k in range(b.ncols):
+        x[j,k] = (b[j,k] - A[j,0] * x[j-1,k]) / bet
+    for j in range(j-2,-1,-1):
+      for k in range(b.ncols):
+        x[j,k] -= gam[j+1] * x[j+1,k]
+
+    if ret:
+      return x
+
+  @staticmethod
+  def banded_multiply(A, x, m1, m2, b=None):
+    # m1 = number of subdiagonal elements
+    # m2 = number of superdiagonal elements
+    ret = False
+    if b is None:
+      ret = True
+    tmploop = 0
+    n = A.nrows
+    b = Matrix(size=(1,n), value=0.0, mytype=float)
+    for i in range(n):
+      k = i - m1
+      tmploop = min(m1 + m2 + 1, n - k)
+      # b[i] = 0.0
+      for j in range(max(0,-k),tmploop):
+        b[i] += A[i,j] * x[j+k]
+    if ret:
+      return b
+
 
 class LUdecomposition:
   def __init__(self, A):
@@ -427,29 +484,58 @@ class LUdecomposition:
     return dd
 
 
+class Banded:
+  @staticmethod
+  def bandwidth(A):
+    sub = 0
+    sup = 0
+    for j in range(A.ncols):
+      for i in range(j + 1, A.nrows):
+        if A[i,j] != 0.0:
+          sub = max(sub, i - j)
+      for i in range(j - 1, -1, -1):
+        if A[i,j] != 0.0:
+          sup = max(sup, j - i)
+    return sub, sup
+
+  def __init__(self, A):
+    self.__n = A.nrows
+
+
 if __name__ == '__main__':
-  a = Matrix(size=int(3), value=0.0)
-  a = Matrix.eye(size=3)
-  print('a = \n{0}\n'.format(a))
-  # for i in range(a.nrows):
-  #   for j in range(a.ncols):
-  #     print(a[i,j])
+  # a = Matrix(size=int(3), value=0.0)
+  # a = Matrix.eye(size=3)
+  # print('a = \n{0}\n'.format(a))
+  # # for i in range(a.nrows):
+  # #   for j in range(a.ncols):
+  # #     print(a[i,j])
 
-  # gauss-jordan
-  a = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
-  b = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
-  print('a = \n{0}\n'.format(a))
-  # for i in range(a.nrows):
-  #   for j in range(a.ncols):
-  #     print(a[i,j])
-  LinAlg.gauss_jordan_full_pivot(a)
-  print('a = \n{0}\n'.format(a))
-  # for i in range(a.nrows):
-  #   for j in range(a.ncols):
-  #     print(a[i,j])
-  print('a * a-1 =\n{0}\n'.format(b * a))
+  # # gauss-jordan
+  # a = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
+  # b = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
+  # print('a = \n{0}\n'.format(a))
+  # # for i in range(a.nrows):
+  # #   for j in range(a.ncols):
+  # #     print(a[i,j])
+  # LinAlg.gauss_jordan_full_pivot(a)
+  # print('a = \n{0}\n'.format(a))
+  # # for i in range(a.nrows):
+  # #   for j in range(a.ncols):
+  # #     print(a[i,j])
+  # print('a * a-1 =\n{0}\n'.format(b * a))
 
-  lu = LUdecomposition(b)
-  print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
+  # lu = LUdecomposition(b)
+  # print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
+
+  b = Matrix(size=[[3, 1, 0, 0, 0, 0, 0],
+                   [4, 1, 5, 0, 0, 0, 0],
+                   [9, 2, 6, 5, 0, 0, 0],
+                   [0, 3, 5, 8, 9, 0, 0],
+                   [0, 0, 7, 9, 3, 2, 0],
+                   [0, 0, 0, 3, 8, 4, 6],
+                   [0, 0, 0, 0, 2, 4, 4]], mytype=float)
+  print('b = \n{0}\n'.format(b))
+  m1, m2 = Banded.band(b)
+  print(f'm1 = {m1:n}, m2 = {m2:n}')
 
 
