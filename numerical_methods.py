@@ -489,17 +489,82 @@ class Banded:
   def bandwidth(A):
     sub = 0
     sup = 0
-    for j in range(A.ncols):
-      for i in range(j + 1, A.nrows):
-        if A[i,j] != 0.0:
-          sub = max(sub, i - j)
-      for i in range(j - 1, -1, -1):
-        if A[i,j] != 0.0:
-          sup = max(sup, j - i)
+    if type(A) == list:
+      n = len(A)
+      for j in range(n):
+        for i in range(j + 1, n):
+          if A[i][j] != 0.0:
+            sub = max(sub, i - j)
+        for i in range(j - 1, -1, -1):
+          if A[i][j] != 0.0:
+            sup = max(sup, j - i)
+    elif type(A) == Matrix:
+      n = A.nrows
+      for j in range(n):
+        for i in range(j + 1, n):
+          if A[i,j] != 0.0:
+            sub = max(sub, i - j)
+        for i in range(j - 1, -1, -1):
+          if A[i,j] != 0.0:
+            sup = max(sup, j - i)
+    else:
+      raise TypeError(f'input of type {str(type(A))} not supported, must be either Matrix or a list of lists.')
     return sub, sup
 
-  def __init__(self, A):
+  @classmethod
+  def convert(cls, A):
+    sub, sup = cls.bandwidth(A)
+    tmploop = 0
+    if type(A) == list:
+      n = len(A)
+      a = Matrix(size=(len(A[0]), sub + sup + 1), value = 0.0)
+      for i in range(n):
+        k = i - sub
+        tmploop = min(sub + sup + 1, n - k)
+        m = max(k, 0)
+        for j in range(max(0,-k), tmploop):
+          a[i,j] = A[i][m]
+          m += 1
+
+    elif type(A) == Matrix:
+      n = A.nrows
+      a = Matrix(size=(A.nrows, sub + sup + 1), value = 0.0)
+      for i in range(n):
+        k = i - sub
+        tmploop = min(sub + sup + 1, n - k)
+        m = max(k, 0)
+        for j in range(max(0,-k), tmploop):
+          a[i,j] = A[i,m]
+          m += 1
+
+    else:
+      raise TypeError(f'input of type {str(type(A))} not supported, must be either Matrix or a list of lists.')
+
+    return cls(a, sub, sup)
+
+  def unravel(self):
+    n = self.__n
+    sub = self.__sub
+    sup = self.__sup
+    tmploop = 0
+    a = Matrix(size=(n, n), value = 0.0)
+    for i in range(n):
+      k = i - sub
+      tmploop = min(sub + sup + 1, n - k)
+      m = max(k, 0)
+      for j in range(max(0,-k), tmploop):
+        a[i,m] = self.__b[i,j]
+        m += 1
+    return a
+
+  def __init__(self, A, sub, sup):
     self.__n = A.nrows
+    self.__b = deepcopy(A)
+    self.__sub = sub
+    self.__sup = sup
+
+  def __str__(self):
+    return str(self.__b)
 
 
 if __name__ == '__main__':
@@ -535,7 +600,10 @@ if __name__ == '__main__':
                    [0, 0, 0, 3, 8, 4, 6],
                    [0, 0, 0, 0, 2, 4, 4]], mytype=float)
   print('b = \n{0}\n'.format(b))
-  m1, m2 = Banded.band(b)
+  m1, m2 = Banded.bandwidth(b)
   print(f'm1 = {m1:n}, m2 = {m2:n}')
+  bb = Banded.convert(b)
+  print('banded b = \n{0}\n'.format(bb))
+
 
 
