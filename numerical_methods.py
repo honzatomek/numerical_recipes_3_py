@@ -559,12 +559,133 @@ class Banded:
 
   def __init__(self, A, sub, sup):
     self.__n = A.nrows
-    self.__b = deepcopy(A)
+    self.__au = deepcopy(A)
+    self.__al = Matrix(size=(A.nrows, sub), value=0.0, mytype=float)
+    self.__indx = Matrix(size=(1, A.nrows), value=0, mytype=int)
     self.__sub = sub
     self.__sup = sup
+    self.__decompose()
+
+  def __decompose(self):
+    TINY = 1.0e-40
+    tmp = 0.0
+    mm = self.__sub + self.__sup + 1
+    l = self.__sub
+    for i in range(self.__sub):
+      for j in range(self.__sub, mm):
+        self.__au[i,j - l] = self.__au[i,j]
+      l -= 1
+      for j in range(mm - l - 1, mm):
+        self.__au[i,j] = 0.0
+    d = 1.0
+    l = self.__sub
+    for k in range(self.__n):
+      tmp = self.__au[k,0]
+      i = k
+      if l < self.__n:
+        l += 1
+      for j in range(k+1, l):
+        if abs(self.__au[j,0]) > abs(tmp):
+          tmp = self.__au[j,0]
+          i = j
+      self.__indx[k] = i + 1
+      if tmp == 0.0:
+        self.__au[k,0] = TINY
+        if i != k:
+          d *= -1.0
+          self.__au.swap_rows(k, i)
+        for i in range(k+1, l):
+          tmp = self.__au[i,0] / self.__au[k,0]
+          self.__al[k, i - k - 1] = tmp
+          for j in range(mm):
+            self.__au[i,j-1] = self.__au[i,j] - tmp * self.__au[k,j]
+          self.__au[i,mm -1] = 0.0
 
   def __str__(self):
     return str(self.__b)
+
+
+# Cuthill-McKee and Reverse Cuthill-McKee algorithm
+# https://ciprian-zavoianu.blogspot.com/2009/01/project-bandwidth-reduction.html
+class CuthillMcKee:
+  @classmethod
+  def __degrees(cls, A):
+    d = list()
+    for i in range(A.nrows):
+      d.append(0)
+      for j in range(A.ncols):
+        if i != j and A[i,j] != 0.0:
+          d[i] += 1
+    return d
+
+  @classmethod
+  def __sort_by_degree(cls, indx, degrees):
+    # ascending
+    tmp = 0
+    n = len(indx)
+    for i in range(n - 1):
+      for j in range(i, n):
+        if degrees[indx[i]] < degrees[indx[j]]:
+          tmp = indx[i]
+          indx[i] = indx[j]
+          indx[j] = tmp
+
+  @classmethod
+  def __min_degree(cls, degrees, exclude=list()):
+    min = max(degrees)
+    indx = -1
+    for i in range(len(degrees)):
+      if i not in exclude:
+        if degrees[i] < min:
+          min = degrees[i]
+          indx = i
+    return indx
+
+  @classmethod
+  def normal(cls, A):
+    degrees = cls.__degrees(A)
+    Q = list()
+    R = list()
+    k = -1
+    while len(R) < A.nrows:
+      min_degree = cls.__min_degree(degrees, exclude=R)
+      Q.append(min_degree)
+      while len(Q) > 0:
+        i = Q.pop(0)
+        if i not in R:
+          R.append(i)
+          indx = list()
+          for j in range(A.ncols):
+            if A[i,j] != 0 and j not in R:
+              indx.append(j)
+          cls.__sort_by_degree(indx, degrees)
+          Q.extend(indx)
+        k += 1
+        print('{0:3n}: R=({1}) Q=({2})'.format(k, ' '.join([str(r) for r in R]), ' '.join([str(q) for q in Q])))
+    print()
+    return R
+
+  @classmethod
+  def reversed(cls, A):
+    R = cls.normal(A)
+    return R[::-1]
+
+  @classmethod
+  def print(cls, A, R=None):
+    if R is None:
+      R = [i for i in range(A.nrows)]
+    msg = ''
+    for i in range(A.nrows):
+      msg += ''.join(['{0:3n}'.format(A[R[i],R[j]]) for j in range(A.ncols)])
+      msg += '\n'
+    msg = msg
+    print(msg)
+
+  @classmethod
+  def print_labels(cls, R):
+    print('Old New')
+    for i in range(len(R)):
+      print('{0:3n} {1:3n}'.format(i, R[i]))
 
 
 if __name__ == '__main__':
@@ -592,18 +713,31 @@ if __name__ == '__main__':
   # lu = LUdecomposition(b)
   # print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
 
-  b = Matrix(size=[[3, 1, 0, 0, 0, 0, 0],
-                   [4, 1, 5, 0, 0, 0, 0],
-                   [9, 2, 6, 5, 0, 0, 0],
-                   [0, 3, 5, 8, 9, 0, 0],
-                   [0, 0, 7, 9, 3, 2, 0],
-                   [0, 0, 0, 3, 8, 4, 6],
-                   [0, 0, 0, 0, 2, 4, 4]], mytype=float)
-  print('b = \n{0}\n'.format(b))
-  m1, m2 = Banded.bandwidth(b)
-  print(f'm1 = {m1:n}, m2 = {m2:n}')
-  bb = Banded.convert(b)
-  print('banded b = \n{0}\n'.format(bb))
+  # b = Matrix(size=[[3, 1, 0, 0, 0, 0, 0],
+  #                  [4, 1, 5, 0, 0, 0, 0],
+  #                  [9, 2, 6, 5, 0, 0, 0],
+  #                  [0, 3, 5, 8, 9, 0, 0],
+  #                  [0, 0, 7, 9, 3, 2, 0],
+  #                  [0, 0, 0, 3, 8, 4, 6],
+  #                  [0, 0, 0, 0, 2, 4, 4]], mytype=float)
+  # print('b = \n{0}\n'.format(b))
+  # m1, m2 = Banded.bandwidth(b)
+  # print(f'm1 = {m1:n}, m2 = {m2:n}')
+  # bb = Banded.convert(b)
+  # print('banded b = \n{0}\n'.format(bb))
 
-
+  A = Matrix(size=[[1, 0, 0, 0, 1, 0, 0, 0],
+                   [0, 1, 1, 0, 0, 1, 0, 1],
+                   [0, 1, 1, 0, 1, 0, 0, 0],
+                   [0, 0, 0, 1, 0, 0, 1, 0],
+                   [1, 0, 1, 0, 1, 0, 0, 0],
+                   [0, 1, 0, 0, 0, 1, 0, 1],
+                   [0, 0, 0, 1, 0, 0, 1, 0],
+                   [0, 1, 0, 0, 0, 1, 0, 1]], mytype=int)
+  CuthillMcKee.print(A)
+  R = CuthillMcKee.normal(A)
+  CuthillMcKee.print(A, R)
+  R = CuthillMcKee.reversed(A)
+  CuthillMcKee.print(A, R)
+  CuthillMcKee.print_labels(R)
 
