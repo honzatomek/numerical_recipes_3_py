@@ -681,12 +681,15 @@ class CuthillMcKee:
     msg = msg
     print(msg)
 
+<<<<<<< HEAD
   @classmethod
   def print_labels(cls, R):
     print('Old New')
     for i in range(len(R)):
       print('{0:3n} {1:3n}'.format(i, R[i]))
 
+=======
+>>>>>>> 82ee516ed450ad25ce237f9eaa9880a508786483
 
 if __name__ == '__main__':
   # a = Matrix(size=int(3), value=0.0)
@@ -739,5 +742,8 @@ if __name__ == '__main__':
   CuthillMcKee.print(A, R)
   R = CuthillMcKee.reversed(A)
   CuthillMcKee.print(A, R)
+<<<<<<< HEAD
   CuthillMcKee.print_labels(R)
+=======
+>>>>>>> 82ee516ed450ad25ce237f9eaa9880a508786483
 
