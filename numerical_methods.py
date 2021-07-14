@@ -352,13 +352,14 @@ class LinAlg:
       ret = True
     tmploop = 0
     n = A.nrows
-    b = Matrix(size=(1,n), value=0.0, mytype=float)
+    b = Matrix(size=(n,x.ncols), value=0.0, mytype=float)
     for i in range(n):
       k = i - m1
       tmploop = min(m1 + m2 + 1, n - k)
       # b[i] = 0.0
       for j in range(max(0,-k),tmploop):
-        b[i] += A[i,j] * x[j+k]
+        for l in range(x.ncols):
+          b[i,l] += A[i,j] * x[j+k,l]
     if ret:
       return b
 
@@ -560,10 +561,12 @@ class Banded:
   def __init__(self, A, sub, sup):
     self.__n = A.nrows
     self.__au = deepcopy(A)
-    self.__al = Matrix(size=(A.nrows, sub), value=0.0, mytype=float)
     self.__indx = Matrix(size=(1, A.nrows), value=0, mytype=int)
+    self.__al = Matrix(size=(A.nrows, sub), value=0.0, mytype=float)
     self.__sub = sub
     self.__sup = sup
+    self.__d = 1.0
+    self.__det = None
     self.__decompose()
 
   def __decompose(self):
@@ -577,7 +580,7 @@ class Banded:
       l -= 1
       for j in range(mm - l - 1, mm):
         self.__au[i,j] = 0.0
-    d = 1.0
+    self.__d = 1.0
     l = self.__sub
     for k in range(self.__n):
       tmp = self.__au[k,0]
@@ -592,7 +595,7 @@ class Banded:
       if tmp == 0.0:
         self.__au[k,0] = TINY
         if i != k:
-          d *= -1.0
+          self.__d *= -1.0
           self.__au.swap_rows(k, i)
         for i in range(k+1, l):
           tmp = self.__au[i,0] / self.__au[k,0]
@@ -600,6 +603,43 @@ class Banded:
           for j in range(mm):
             self.__au[i,j-1] = self.__au[i,j] - tmp * self.__au[k,j]
           self.__au[i,mm -1] = 0.0
+
+  def solve(self, b, x=None):
+    ret = False
+    if x is None:
+      ret = True
+    x = deepcopy(b)
+    tmp = 0.0
+    mm = self.__sub + self.__sup + 1
+    l = self.__sub
+    for k in range(self.__n):
+      j = self.__indx[k] - 1
+      if j != k:
+        x.swap_rows(k, j)
+      if l < self.__n:
+        l += 1
+      for j in range(k+1, l):
+        for p in range(b.ncols):
+          x[j,p] -= self.__al[k,j - k - 1] * x[k,p]
+    l = 1
+    for i in range(n-1,-1,-1):
+      for p in range(b.ncols):
+        tmp = x[i,p]
+        for k in range(1, l):
+          tmp -= self.__au[i,k] * x[k + i,p]
+        x[i,p] = tmp / self.__au[i, 0]
+        if l < mm:
+         l += 1
+    if ret:
+      return x
+
+  def determinant(self):
+    if self.__det is not None:
+      return self.__det
+    self.__det = self.__d
+    for i in range(self.__n):
+      self.__det *= self.__au[i,0]
+    return self.__det
 
   def __str__(self):
     return str(self.__b)
@@ -681,15 +721,12 @@ class CuthillMcKee:
     msg = msg
     print(msg)
 
-<<<<<<< HEAD
   @classmethod
   def print_labels(cls, R):
     print('Old New')
     for i in range(len(R)):
       print('{0:3n} {1:3n}'.format(i, R[i]))
 
-=======
->>>>>>> 82ee516ed450ad25ce237f9eaa9880a508786483
 
 if __name__ == '__main__':
   # a = Matrix(size=int(3), value=0.0)
@@ -742,8 +779,5 @@ if __name__ == '__main__':
   CuthillMcKee.print(A, R)
   R = CuthillMcKee.reversed(A)
   CuthillMcKee.print(A, R)
-<<<<<<< HEAD
   CuthillMcKee.print_labels(R)
-=======
->>>>>>> 82ee516ed450ad25ce237f9eaa9880a508786483
 
