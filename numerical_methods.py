@@ -205,9 +205,14 @@ class Matrix:
     return self.__class__(column)
 
   def transpose(self):
-    for i in range(self.__n):
-      for j in range(i, self.__m):
-        self.swap((i,j), (j,i))
+    items = list()
+    for j in range(self.__m):
+      for i in range(self.__n):
+        items.append(self[i,j])
+    self.__items = items
+    tmp = self.__n
+    self.__n = self.__m
+    self.__m = tmp
 
   @property
   def T(self):
@@ -468,12 +473,12 @@ class LUdecomposition:
         sum = x[ip,k]
         x[ip,k]=x[i,k]
         if ii != 0:
-          for j in range(ii-1,j):
+          for j in range(ii-1,i):
             sum -= self.__lu[i,j] * x[j,k]
         elif sum != 0.0:
           ii = i + 1
         x[i,k] = sum
-      for i in range(self.__n, -1, -1):
+      for i in range(self.__n - 1, -1, -1):
         sum = x[i,k]
         for j in range(i+1, self.__n):
           sum -= self.__lu[i,j] * x[j,k]
@@ -496,18 +501,39 @@ class LUdecomposition:
       dd *= self.__lu[i,i]
     return dd
 
-  def improve(self, b, x):
-    r = Matrix(size=(self.__n, b.ncols), value=0.0, mytype=float)
-    for i in range(self.__n):
-      for k in range(b.ncols):
-        sdp = float128(-b[i,k])
-        for j in range(self.__n):
-          sdp += float128(self.__a[i,j]) * float128(x[j,k])
-          r[i,k] = float(sdp)
-    self.solve(r, r)
-    for i in range(self.__n):
-      for k in range(b.ncols):
-        x[i,k] -= r[i,k]
+  def improve(self, b, x, iterations=None, epsilon=None, maxiter=10, norm='compliance'):
+    if iterations is not None:
+      maxiter = iterations
+    if epsilon is not None:
+      if norm == 'compliance':
+        n = x.T * self.__a * x
+        nn = n[0,0]
+      elif norm == 'length':
+        n = x.T * x
+        nn = n[0,0] ** 0.5
+    for it in range(maxiter):
+      r = Matrix(size=(self.__n, b.ncols), value=0.0, mytype=float)
+      for i in range(self.__n):
+        for k in range(b.ncols):
+          sdp = float128(-b[i,k])
+          for j in range(self.__n):
+            sdp += float128(self.__a[i,j]) * float128(x[j,k])
+            r[i,k] = float(sdp)
+      self.solve(r, r)
+      for i in range(self.__n):
+        for k in range(b.ncols):
+          x[i,k] -= r[i,k]
+      if epsilon is not None:
+        if norm == 'compliance':
+          n = x.T * self.__a * x
+          eps = abs(nn - n[0,0])
+          nn = n[0,0]
+        if norm == 'length':
+          n = x.T * x
+          eps = abs(nn - n[0,0] ** 0.5)
+          nn = n[0,0] ** 0.5
+        if eps < epsilon:
+          break
 
 
 class Banded:
@@ -802,8 +828,8 @@ if __name__ == '__main__':
   #                  [0, 0, 7, 9, 3, 2, 0],
   #                  [0, 0, 0, 3, 8, 4, 6],
   #                  [0, 0, 0, 0, 2, 4, 4]], mytype=float)
-  a = Matrix(size=[[1, 0, 0],
-                   [-1, 2, 0],
+  a = Matrix(size=[[1 + 1e32, 0, 0],
+                   [-1, 2 - 1e24, 0],
                    [0, -1, 3]], mytype=float)
   b = a.T
   c = b * a
@@ -820,6 +846,15 @@ if __name__ == '__main__':
   lu = LUdecomposition(c)
   print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
   print('LUdecomposition L * U = \n{0}\n'.format(lu.L * lu.U))
+  b = Matrix([[1 + 1e-60],[2.056],[-3.01]], mytype=float)
+  x = lu.solve(b)
+  xref = deepcopy(x)
+  print('x = \n{0}\n'.format(x))
+  lu.improve(b, x, epsilon=2e-7)
+  print('x = \n{0}\n'.format(x))
+  for i in range(x.nrows):
+    if abs(x[i,0] - xref[i,0]) > 1e-5:
+      print('Not equal')
 
   # A = Matrix(size=[[1, 0, 0, 0, 1, 0, 0, 0],
   #                  [0, 1, 1, 0, 0, 1, 0, 1],
