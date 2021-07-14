@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from copy import deepcopy
+from numpy import float128
 
 class Matrix:
   @classmethod
@@ -203,6 +204,17 @@ class Matrix:
       column.append([self.__items[i * self.__m + c]])
     return self.__class__(column)
 
+  def transpose(self):
+    for i in range(self.__n):
+      for j in range(i, self.__m):
+        self.swap((i,j), (j,i))
+
+  @property
+  def T(self):
+    B = deepcopy(self)
+    B.transpose()
+    return B
+
 
 class LinAlg:
   @staticmethod
@@ -366,6 +378,7 @@ class LinAlg:
 
 class LUdecomposition:
   def __init__(self, A):
+    self.__a = A
     self.__n = A.nrows
     self.__lu = Matrix(size=A)
     self.__d = 0.0
@@ -393,9 +406,9 @@ class LUdecomposition:
         tmp = abs(self.__lu[i,j])
         if tmp > big:
           big = tmp
-        if big == 0.0:
-          raise ValueError('singular matrix')
-        vv[i] = 1.0 / big
+      if big == 0.0:
+        raise ValueError('singular matrix')
+      vv[i] = 1.0 / big
     for k in range(self.__n):
       big = 0.0
       for i in range(k, self.__n):
@@ -404,17 +417,15 @@ class LUdecomposition:
           big = tmp
           imax = i
       if k != imax:
-        for j in range(self.__n):
-          tmp = self.__lu[imax,j]
-          self.__lu[imax,j] = self.__lu[k,j]
-          self.__lu[k,j] = tmp
-          self.__d *= -1.0
-          vv[imax] = vv[k]
-        self.__indx[k] = imax
+        self.__lu.swap_rows(imax, k)
+        self.__d *= -1.0
+        vv[imax] = vv[k]
+      self.__indx[k] = imax
       if self.__lu[k, k] == 0.0:
         self.__lu[k,k] = TINY
       for i in range(k+1, self.__n):
-        tmp = self.__lu[i,k] / self.__lu[k,k]
+        self.__lu[i,k] /= self.__lu[k,k]
+        tmp = self.__lu[i,k]
         for j in range(k+1, self.__n):
           self.__lu[i,j] -= tmp * self.__lu[k,j]
 
@@ -442,7 +453,8 @@ class LUdecomposition:
     ret = False
     if x is None:
       ret = True
-    x = deepcopy(b)
+    if x != b:
+      x = deepcopy(b)
 
     m = b.ncols
     if b.nrows != self.__n or x.nrows != self.__n or b.ncols != x.ncols:
@@ -483,6 +495,19 @@ class LUdecomposition:
     for i in range(self.__n):
       dd *= self.__lu[i,i]
     return dd
+
+  def improve(self, b, x):
+    r = Matrix(size=(self.__n, b.ncols), value=0.0, mytype=float)
+    for i in range(self.__n):
+      for k in range(b.ncols):
+        sdp = float128(-b[i,k])
+        for j in range(self.__n):
+          sdp += float128(self.__a[i,j]) * float128(x[j,k])
+          r[i,k] = float(sdp)
+    self.solve(r, r)
+    for i in range(self.__n):
+      for k in range(b.ncols):
+        x[i,k] -= r[i,k]
 
 
 class Banded:
@@ -543,20 +568,27 @@ class Banded:
 
     return cls(a, sub, sup)
 
-  def unravel(self):
-    n = self.__n
-    sub = self.__sub
-    sup = self.__sup
-    tmploop = 0
-    a = Matrix(size=(n, n), value = 0.0)
-    for i in range(n):
-      k = i - sub
-      tmploop = min(sub + sup + 1, n - k)
-      m = max(k, 0)
-      for j in range(max(0,-k), tmploop):
-        a[i,m] = self.__b[i,j]
-        m += 1
-    return a
+  # def unravel(self):
+  #   n = self.__n
+  #   sub = self.__sub
+  #   sup = self.__sup
+  #   tmploop = 0
+  #   a = Matrix(size=n, value = 0.0)
+
+  #   a = LinAlg.banded_multiply(A=self.__au, b=Matrix.eye(size=self.__n, mytype=float), m1=0, m2=self.__sup)
+
+  #   tmploop = 0
+  #   n = A.nrows
+  #   b = Matrix(size=(n,x.ncols), value=0.0, mytype=float)
+  #   for i in range(n):
+  #     k = i - m1
+  #     tmploop = min(m1 + m2 + 1, n - k)
+  #     # b[i] = 0.0
+  #     for j in range(max(0,-k),tmploop):
+  #       for l in range(x.ncols):
+  #         b[i,l] += A[i,j] * x[j+k,l]
+  #   if ret:
+  #     return b
 
   def __init__(self, A, sub, sup):
     self.__n = A.nrows
@@ -575,7 +607,7 @@ class Banded:
     mm = self.__sub + self.__sup + 1
     l = self.__sub
     for i in range(self.__sub):
-      for j in range(self.__sub, mm):
+      for j in range(self.__sub - i, mm):
         self.__au[i,j - l] = self.__au[i,j]
       l -= 1
       for j in range(mm - l - 1, mm):
@@ -594,15 +626,15 @@ class Banded:
       self.__indx[k] = i + 1
       if tmp == 0.0:
         self.__au[k,0] = TINY
-        if i != k:
-          self.__d *= -1.0
-          self.__au.swap_rows(k, i)
-        for i in range(k+1, l):
-          tmp = self.__au[i,0] / self.__au[k,0]
-          self.__al[k, i - k - 1] = tmp
-          for j in range(mm):
-            self.__au[i,j-1] = self.__au[i,j] - tmp * self.__au[k,j]
-          self.__au[i,mm -1] = 0.0
+      if i != k:
+        self.__d *= -1.0
+        self.__au.swap_rows(k, i)
+      for i in range(k+1, l):
+        tmp = self.__au[i,0] / self.__au[k,0]
+        self.__al[k, i - k - 1] = tmp
+        for j in range(mm):
+          self.__au[i,j-1] = self.__au[i,j] - tmp * self.__au[k,j]
+        self.__au[i,mm -1] = 0.0
 
   def solve(self, b, x=None):
     ret = False
@@ -641,8 +673,28 @@ class Banded:
       self.__det *= self.__au[i,0]
     return self.__det
 
+  @property
+  def L(self):
+    l = Matrix.eye(size=self.__n, mytype=float)
+    for i in range(1, self.__n):
+      for j in range(self.__al.ncols):
+        l[i, i - j - 1] = self.__al[i-1,j]
+    return l
+
+  @property
+  def U(self):
+    u = Matrix(size=self.__n, value=0.0, mytype=float)
+    for i in range(self.__n):
+      for j in range(self.__au.ncols):
+        if i + j < self.__n:
+          u[i,i+j] = self.__au[i, j]
+    return u
+
+  def __mul__(self, b):
+    pass
+
   def __str__(self):
-    return str(self.__b)
+    return str(self.__al) + '\n' + str(self.__au)
 
 
 # Cuthill-McKee and Reverse Cuthill-McKee algorithm
@@ -732,52 +784,55 @@ if __name__ == '__main__':
   # a = Matrix(size=int(3), value=0.0)
   # a = Matrix.eye(size=3)
   # print('a = \n{0}\n'.format(a))
-  # # for i in range(a.nrows):
-  # #   for j in range(a.ncols):
-  # #     print(a[i,j])
 
   # # gauss-jordan
   # a = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
   # b = Matrix([[2.0, 6.0, -2.0], [1.0, 6.0, -4.0], [-1.0, 4.0, 9.0]])
   # print('a = \n{0}\n'.format(a))
-  # # for i in range(a.nrows):
-  # #   for j in range(a.ncols):
-  # #     print(a[i,j])
   # LinAlg.gauss_jordan_full_pivot(a)
-  # print('a = \n{0}\n'.format(a))
-  # # for i in range(a.nrows):
-  # #   for j in range(a.ncols):
-  # #     print(a[i,j])
   # print('a * a-1 =\n{0}\n'.format(b * a))
 
   # lu = LUdecomposition(b)
   # print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
 
-  # b = Matrix(size=[[3, 1, 0, 0, 0, 0, 0],
+  # c = Matrix(size=[[3, 1, 0, 0, 0, 0, 0],
   #                  [4, 1, 5, 0, 0, 0, 0],
   #                  [9, 2, 6, 5, 0, 0, 0],
   #                  [0, 3, 5, 8, 9, 0, 0],
   #                  [0, 0, 7, 9, 3, 2, 0],
   #                  [0, 0, 0, 3, 8, 4, 6],
   #                  [0, 0, 0, 0, 2, 4, 4]], mytype=float)
-  # print('b = \n{0}\n'.format(b))
-  # m1, m2 = Banded.bandwidth(b)
-  # print(f'm1 = {m1:n}, m2 = {m2:n}')
-  # bb = Banded.convert(b)
-  # print('banded b = \n{0}\n'.format(bb))
+  a = Matrix(size=[[1, 0, 0],
+                   [-1, 2, 0],
+                   [0, -1, 3]], mytype=float)
+  b = a.T
+  c = b * a
+  print('a = \n{0}\n'.format(a))
+  print('b = \n{0}\n'.format(b))
+  print('c = \n{0}\n'.format(c))
+  m1, m2 = Banded.bandwidth(c)
+  print(f'm1 = {m1:n}, m2 = {m2:n}')
+  cc = Banded.convert(c)
+  print('banded c = \n{0}\n'.format(cc))
+  print('banded c.L = \n{0}\n'.format(cc.L))
+  print('banded c.U = \n{0}\n'.format(cc.U))
+  print('banded c.L * c.U = \n{0}\n'.format(cc.L * cc.U))
+  lu = LUdecomposition(c)
+  print('l =\n{0}\nu =\n{1}\nindx =\n{2}\n'.format(lu.L, lu.U, lu.rowindx))
+  print('LUdecomposition L * U = \n{0}\n'.format(lu.L * lu.U))
 
-  A = Matrix(size=[[1, 0, 0, 0, 1, 0, 0, 0],
-                   [0, 1, 1, 0, 0, 1, 0, 1],
-                   [0, 1, 1, 0, 1, 0, 0, 0],
-                   [0, 0, 0, 1, 0, 0, 1, 0],
-                   [1, 0, 1, 0, 1, 0, 0, 0],
-                   [0, 1, 0, 0, 0, 1, 0, 1],
-                   [0, 0, 0, 1, 0, 0, 1, 0],
-                   [0, 1, 0, 0, 0, 1, 0, 1]], mytype=int)
-  CuthillMcKee.print(A)
-  R = CuthillMcKee.normal(A)
-  CuthillMcKee.print(A, R)
-  R = CuthillMcKee.reversed(A)
-  CuthillMcKee.print(A, R)
-  CuthillMcKee.print_labels(R)
+  # A = Matrix(size=[[1, 0, 0, 0, 1, 0, 0, 0],
+  #                  [0, 1, 1, 0, 0, 1, 0, 1],
+  #                  [0, 1, 1, 0, 1, 0, 0, 0],
+  #                  [0, 0, 0, 1, 0, 0, 1, 0],
+  #                  [1, 0, 1, 0, 1, 0, 0, 0],
+  #                  [0, 1, 0, 0, 0, 1, 0, 1],
+  #                  [0, 0, 0, 1, 0, 0, 1, 0],
+  #                  [0, 1, 0, 0, 0, 1, 0, 1]], mytype=int)
+  # CuthillMcKee.print(A)
+  # R = CuthillMcKee.normal(A)
+  # CuthillMcKee.print(A, R)
+  # R = CuthillMcKee.reversed(A)
+  # CuthillMcKee.print(A, R)
+  # CuthillMcKee.print_labels(R)
 
