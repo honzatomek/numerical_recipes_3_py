@@ -806,6 +806,89 @@ class CuthillMcKee:
       print('{0:3n} {1:3n}'.format(i, R[i]))
 
 
+class SingularValueDecomposition:
+  def __init__(self, A):
+    self.__n = A.nrows
+    self.__m = A.ncols
+    self.__u = Matrix(size=A)
+    self.__v = Matrix(size=(self.__n, self.__n), value=0.0, mytype=0.0)
+    self.__w = Matrix(size=(1, self.__n), value=0.0, mytype=0.0)
+    self.__eps = 0.0
+    self.__decompose()
+    self.__reorder()
+    self.__tsh = 0.5 * sqr(self.__m + self.__n + 1) * self.__w[0] * self.__eps
+
+  def rank(self, thresh=-1.0):
+    nr = 0
+    if thresh > 0.0:
+      self.__tsh = thresh
+    else:
+      self.__tsh = 0.5 * sqr(self.__m + self.__n + 1) * self.__w[0] * self.__eps
+    for j in range(self.__n):
+      if self.__w[j] > self.__tsh:
+        nr += 1
+    return nr
+
+  def nullity(self, thresh=-1.0):
+    nn = 0
+    if thresh > 0.0:
+      self.__tsh = thresh
+    else:
+      self.__tsh = 0.5 * sqr(self.__m + self.__n + 1) * self.__w[0] * self.__eps
+    for j in range(self.__n):
+      if self.__w[j] <= self.__tsh:
+        nn += 1
+    return nn
+
+  def range(self, thresh=-1.0):
+    nr = 0
+    rnge = Matrix(size=(self.__m, self.rank(thresh)), value=0.0, mytype=float)
+    for j in range(self.__n):
+      if self.__w[j] > self.__tsh:
+        for i in range(self.__m):
+          rnge[i,nr] = self.__u[i,j]
+        nr += 1
+    return rnge
+
+  def nullspace(self, thresh=-1.0):
+    nn = 0
+    nullsp = Matrix(size=(self.__m, self.nullity(thresh)), value=0.0, mytype=float)
+    for j in range(self.__n):
+      if self.__w[j] <= self.__tsh:
+        for jj in range(self.__n):
+          nullsp[jj,nn] = self.__v[jj,j]
+        nn += 1
+    return nullsp
+
+
+class Choleski:
+  def __init__(self, A):
+    self.__n = A.nrows
+    self.__l = Matrix(size=A)
+    self.__decompose()
+
+  def __decompose(self):
+    sum = 0.0
+    if self.__l.ncols != self.__n:
+      raise ValueError('Choleski needs square matrix!')
+    for i in range(self.__n):
+      for j in range(i, self.__n):
+        sum = self.__l[i,j]
+        for k in range(i-1,-1,-1):
+          sum -= self.__l[i,k] * self.__l[j,k]
+        if i == j:
+          if sum <= 0.0:
+            raise ValueError('Choleski failed - singular or ill-conditioned matrix')
+          self.__l = sqr(sum)
+        else:
+          self.__l[j,i] = sum / self.__l[i,i]
+    for i in range(self.__n):
+      for j in range(i):
+        self.__l[j,i] = 0.0
+
+
+
+
 if __name__ == '__main__':
   # a = Matrix(size=int(3), value=0.0)
   # a = Matrix.eye(size=3)
