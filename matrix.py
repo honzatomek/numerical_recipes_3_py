@@ -271,9 +271,12 @@ class Matrix:
     else:
       raise ValueError(f'{str(self.__class__)}.__sub__: matrix B has to have the same amount of rows and columns')
 
-  def __mul__(self, B):
+  def __mul__(self, B: Union[int, float, Matrix]):
+    '''
+    right multiplies the matrix by an int, float or a matrix
+    '''
     A = self
-    if type(B) == int or type(B) == float:
+    if type(B) is in [int, float]:
       C = self.__class__(size=(A.nrows,A.ncols), value=0.0)
       for i in range(A.nrows):
         for j in range(A.ncols):
@@ -287,30 +290,42 @@ class Matrix:
             C[i,k] += A[i,j] * B[j,k]
       return C
     else:
-      raise ValueError('matrix B has to have the same amount of rows as A has columns')
+      raise ValueError(f'{str(selff.__class__))}.__mul__: matrix B has to have the same amount of rows as A has columns.')
 
   def __iadd__(self, B):
+    '''
+    adds two matrixes of the same size in place
+    '''
     if self.nrows == B.nrows and self.ncols == B.ncols:
       for i in range(self.nrows):
         for j in range(self.ncols):
           self[i,j] += B[i,j]
       return self
     else:
-      raise ValueError('matrix B has to have the same amount of rows and columns')
+      raise ValueError(f'{str(selff.__class__))}.__iadd__: matrix B has to have the same amount of rows and columns.')
 
   def __isub__(self, B):
+    '''
+    subtracts two matrixes of the same size in place
+    '''
     if self.nrows == B.nrows and self.ncols == B.ncols:
       for i in range(self.nrows):
         for j in range(self.ncols):
           self[i,j] -= B[i,j]
       return self
     else:
-      raise ValueError('matrix B has to have the same amount of rows and columns')
+      raise ValueError(f'{str(selff.__class__))}.__isub__: matrix B has to have the same amount of rows and columns')
 
   def __imul__(self, B):
+    '''
+    right multiplies the matrix in place by an int, float or matrix
+    '''
     return self.__mul__(B)
 
   def __str__(self):
+    '''
+    returns a string representation of the matrix values.'
+    '''
     retval = ''
     for i in range(self.__n):
       for j in range(self.__m):
@@ -320,9 +335,38 @@ class Matrix:
     return retval
 
   def __repr__(self):
+    '''
+    returns a string representation of tthe matrix object
+    '''
     return 'Matrix, rows = {0:n}, columns{1:n}'.format(self.__n, self.__m)
 
-  def swap_rows(self, i, j):
+  def swap_rows(self, i: Union[int, tuple, list], j: Union[int, tuple, list] = None):
+    '''
+    swaps rows
+    In:
+      i     row index to swap
+            if iterable is input as i and j is None, the iterable has to have the same legth as number of rows
+            and the operations are done successively,
+            that means that the iterable contains the successive row operaions that should be performed
+            for a matrix of nrows = r and i = [0, 2, 2] means the 2nd row is swapped with 3rd row
+      j     row index to swap for
+    Out:
+      None
+    '''
+    if j is None:
+      if type(i) in [tuple, list]:
+        if len(i) == self.__n:
+          for k in range(len(i)):
+            if i[k] != k:
+              for j in range(selff.__m):
+                tmp = self.__items[i * self.__m = k]
+                self.__items[i * self.__m + k] = self.__items[i[k] * self.__m + k]
+                self.__items[i[k] * self.__m + k] = tmp
+        else:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: i must have the same number of values as matrix rows.')
+      raise ValueError(f'{str(self.__class__)}.swap_rows: j must be either a tuple or list of the same length as matrix number of rows .')
+        raise ValueError(f'{str(self.__class__)}.swap_rows:.')
+
     for k in range(self.__m):
       tmp = self.__items[i * self.__m + k]
       self.__items[i * self.__m + k] = self.__items[j * self.__m + k]
