@@ -340,63 +340,117 @@ class Matrix:
     '''
     return 'Matrix, rows = {0:n}, columns{1:n}'.format(self.__n, self.__m)
 
-  def swap_rows(self, i: Union[int, tuple, list], j: Union[int, tuple, list] = None):
+  def swap_rows(self, a: Union[int, tuple, list], b: Union[int, tuple, list] = None):
     '''
     swaps rows
     In:
-      i     row index to swap
-            if iterable is input as i and j is None, the iterable has to have the same legth as number of rows
+      a     row index to swap
+            if iterable is input as a and b is None, the iterable has to have the same legth as number of rows
             and the operations are done successively,
             that means that the iterable contains the successive row operaions that should be performed
-            for a matrix of nrows = r and i = [0, 2, 2] means the 2nd row is swapped with 3rd row
-      j     row index to swap for
+            for a matrix of nrows = r and a = [0, 2, 2] means the 2nd row is swapped with 3rd row
+      b     row index to swap for
     Out:
       None
     '''
-    # only i is supplied
-    if j is None:
-      # i is a list or tuple of row operations
-      if type(i) not in [tuple, list]:
-        raise ValueError(f'{str(self.__class__)}.swap_rows: i must be either a tuple or list of the same length as matrix number of rows .')
-      if len(i) != self.__n:
-        raise ValueError(f'{str(self.__class__)}.swap_rows: i must have the same number of values as matrix rows.')
-      for k in range(len(i)):
-        if type(i[k]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: i[{str(k)}] must be of type int, not {str(type(i[k])}.')
-        if i[k] != k:
+    # only a is supplied
+    if b is None:
+      # a is a list or tuple of row operations
+      if type(a) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: a must be either a tuple or list of the same length as matrix number of rows .')
+      if len(a) != self.__n:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: a must have the same number of values as matrix rows.')
+      for i in range(len(a)):
+        if type(a[i]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(k)}] must be of type int, not {str(type(a[k])}.')
+        if a[i] != i:
           for j in range(self.__m):
-            tmp = self.__items[i * self.__m = k]
-            self.__items[i * self.__m + k] = self.__items[i[k] * self.__m + k]
-            self.__items[i[k] * self.__m + k] = tmp
+            tmp = self.__items[i * self.__m + j]
+            self.__items[i * self.__m + j] = self.__items[a[i] * self.__m + j]
+            self.__items[a[i] * self.__m + j] = tmp
 
-    # i and j are supplied
+    # a and b are supplied
     else:
-      if type(i) is int:
-        i = [i]
-      elif type(i) not in [tuple, list]:
-        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes i must be a tuple or list of ints, not {str(type(i))}.')
-      if type(j) is int:
-        j = [j]
-      elif type(j) not in [tuple, list]:
-        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes j must be a tuple or list of ints, not {str(type(j))}.')
-      if len(i) != len(j):
-        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes i and j must have same length.')
+      if type(a) is int:
+        a = [a]
+      elif type(a) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes a must be a tuple or list of ints, not {str(type(a))}.')
+      else:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes a must be an int or a tuple or list of ints, not {str(type(a))}.')
+      if type(b) is int:
+        b = [b]
+      elif type(b) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes b must be a tuple or list of ints, not {str(type(b))}.')
+      else:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes b must be an int or a tuple or list of ints, not {str(type(b))}.')
+      if len(a) != len(b):
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes a and b must have same length.')
 
-      for m in range(len(i)):
-        if type(i[m]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: i[{str(m)}] must be of type int, not {str(type(i[m])}.')
-        if type(j[m]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: j[{str(m)}] must be of type int, not {str(type(j[m])}.')
-        for k in range(self.__m):
-          tmp = self.__items[i[m] * self.__m + k]
-          self.__items[i[m] * self.__m + k] = self.__items[j[m] * self.__m + k]
-          self.__items[j[m] * self.__m + k] = tmp
+      for i in range(len(a)):
+        if type(a[i]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(i)}] must be of type int, not {str(type(a[i])}.')
+        if type(b[i]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: b[{str(i)}] must be of type int, not {str(type(b[i])}.')
+        for j in range(self.__m):
+          tmp = self.__items[a[i] * self.__m + j]
+          self.__items[a[i] * self.__m + j] = self.__items[b[i] * self.__m + j]
+          self.__items[b[i] * self.__m + j] = tmp
 
-  def swap_cols(self, i, j):
-    for k in range(self.__n):
-      tmp = self.__items[k * self.__m + i]
-      self.__items[k * self.__m + i] = self.__items[k * self.__m + j]
-      self.__items[k * self.__m + j] = tmp
+  def swap_cols(self, a: Union[int, tuple, list], b: Union[int, tuple, list] = None):
+    '''
+    swaps cols
+    In:
+      a     col index to swap
+            if iterable is input as a and b is None, the iterable has to have the same legth as number of cols
+            and the operations are done successively,
+            that means that the iterable contains the successive col operaions that should be performed
+            for a matrix of ncols = r and a = [0, 2, 2] means the 2nd col is swapped with 3rd col
+      b     col index to swap for
+    Out:
+      None
+    '''
+    # only a is supplied
+    if b is None:
+      # a is a list or tuple of col operations
+      if type(a) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: a must be either a tuple or list of the same length as matrix number of cols .')
+      if len(a) != self.__m:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: a must have the same number of values as matrix cols.')
+      for j in range(len(a)):
+        if type(a[j]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j])}.')
+        if a[j] != j:
+          for i in range(self.__n):
+            tmp = self.__items[i * self.__m + j]
+            self.__items[i * self.__m + j] = self.__items[i * self.__m + a[j]]
+            self.__items[i * self.__m + a[j]] = tmp
+
+    # a and b are supplied
+    else:
+      if type(a) is int:
+        a = [a]
+      elif type(a) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: col indexes a must be a tuple or list of ints, not {str(type(a))}.')
+      else:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: col indexes a must be an int or a tuple or list of ints, not {str(type(a))}.')
+      if type(b) is int:
+        b = [b]
+      elif type(b) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: col indexes b must be a tuple or list of ints, not {str(type(b))}.')
+      else:
+        raise ValueError(f'{str(self.__class__)}.swap_cols: col indexes b must be an int or a tuple or list of ints, not {str(type(b))}.')
+      if len(a) != len(b):
+        raise ValueError(f'{str(self.__class__)}.swap_cols: col indexes a and b must have same length.')
+
+      for j in range(len(a)):
+        if type(a[j]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j])}.')
+        if type(b[j]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_cols: b[{str(j)}] must be of type int, not {str(type(b[j])}.')
+        for i in range(self.__n):
+          tmp = self.__items[i * self.__m + a[j]]
+          self.__items[i * self.__m + a[j]] = self.__items[i * self.__m + b[j]]
+          self.__items[i * self.__m + a[j]] = tmp
 
   def swap(self, first, second):
     tmp = self.__items[first[0] * self.__m + first[1]]
