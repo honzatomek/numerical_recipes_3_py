@@ -290,7 +290,7 @@ class Matrix:
             C[i,k] += A[i,j] * B[j,k]
       return C
     else:
-      raise ValueError(f'{str(selff.__class__))}.__mul__: matrix B has to have the same amount of rows as A has columns.')
+      raise ValueError(f'{str(self.__class__))}.__mul__: matrix B has to have the same amount of rows as A has columns.')
 
   def __iadd__(self, B):
     '''
@@ -302,7 +302,7 @@ class Matrix:
           self[i,j] += B[i,j]
       return self
     else:
-      raise ValueError(f'{str(selff.__class__))}.__iadd__: matrix B has to have the same amount of rows and columns.')
+      raise ValueError(f'{str(self.__class__))}.__iadd__: matrix B has to have the same amount of rows and columns.')
 
   def __isub__(self, B):
     '''
@@ -314,7 +314,7 @@ class Matrix:
           self[i,j] -= B[i,j]
       return self
     else:
-      raise ValueError(f'{str(selff.__class__))}.__isub__: matrix B has to have the same amount of rows and columns')
+      raise ValueError(f'{str(self.__class__))}.__isub__: matrix B has to have the same amount of rows and columns')
 
   def __imul__(self, B):
     '''
@@ -353,24 +353,44 @@ class Matrix:
     Out:
       None
     '''
+    # only i is supplied
     if j is None:
-      if type(i) in [tuple, list]:
-        if len(i) == self.__n:
-          for k in range(len(i)):
-            if i[k] != k:
-              for j in range(selff.__m):
-                tmp = self.__items[i * self.__m = k]
-                self.__items[i * self.__m + k] = self.__items[i[k] * self.__m + k]
-                self.__items[i[k] * self.__m + k] = tmp
-        else:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: i must have the same number of values as matrix rows.')
-      raise ValueError(f'{str(self.__class__)}.swap_rows: j must be either a tuple or list of the same length as matrix number of rows .')
-        raise ValueError(f'{str(self.__class__)}.swap_rows:.')
+      # i is a list or tuple of row operations
+      if type(i) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: i must be either a tuple or list of the same length as matrix number of rows .')
+      if len(i) != self.__n:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: i must have the same number of values as matrix rows.')
+      for k in range(len(i)):
+        if type(i[k]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: i[{str(k)}] must be of type int, not {str(type(i[k])}.')
+        if i[k] != k:
+          for j in range(self.__m):
+            tmp = self.__items[i * self.__m = k]
+            self.__items[i * self.__m + k] = self.__items[i[k] * self.__m + k]
+            self.__items[i[k] * self.__m + k] = tmp
 
-    for k in range(self.__m):
-      tmp = self.__items[i * self.__m + k]
-      self.__items[i * self.__m + k] = self.__items[j * self.__m + k]
-      self.__items[j * self.__m + k] = tmp
+    # i and j are supplied
+    else:
+      if type(i) is int:
+        i = [i]
+      elif type(i) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes i must be a tuple or list of ints, not {str(type(i))}.')
+      if type(j) is int:
+        j = [j]
+      elif type(j) not in [tuple, list]:
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes j must be a tuple or list of ints, not {str(type(j))}.')
+      if len(i) != len(j):
+        raise ValueError(f'{str(self.__class__)}.swap_rows: row indexes i and j must have same length.')
+
+      for m in range(len(i)):
+        if type(i[m]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: i[{str(m)}] must be of type int, not {str(type(i[m])}.')
+        if type(j[m]) is not int:
+          raise ValueError(f'{str(self.__class__)}.swap_rows: j[{str(m)}] must be of type int, not {str(type(j[m])}.')
+        for k in range(self.__m):
+          tmp = self.__items[i[m] * self.__m + k]
+          self.__items[i[m] * self.__m + k] = self.__items[j[m] * self.__m + k]
+          self.__items[j[m] * self.__m + k] = tmp
 
   def swap_cols(self, i, j):
     for k in range(self.__n):
