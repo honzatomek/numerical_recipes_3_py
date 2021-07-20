@@ -452,7 +452,39 @@ class Matrix:
           self.__items[i * self.__m + a[j]] = self.__items[i * self.__m + b[j]]
           self.__items[i * self.__m + a[j]] = tmp
 
-  def swap(self, first, second):
+  def swap(self, first: Union[tuple, list, int], second: Union[tuple, list, int]):
+    '''
+    Swaps two values in the matrix
+    In:
+      first     a list or tuple of the first item (for vector an int is enough)
+      second    a list or tuple of the second item (for vector an int is enough)
+    '''
+    # check for ints
+    if type(first) is int:
+      if self.__n == 1:
+        first = [1, first]
+      elif self.__m == 1:
+        first = [first, 1]
+      else:
+        raise TypeError(f'{str(self.__class__)}.swap: supplied first index is an int and Matrix is not a vector.')
+    if type(second) is int:
+      if self.__n == 1:
+        second = [1, second]
+      elif self.__m == 1:
+        second = [second, 1]
+      else:
+        raise TypeError(f'{str(self.__class__)}.swap: supplied second index is an int and Matrix is not a vector.')
+    # check bounds
+    if first[0] < 0 or first[0] >= self.__n:
+      raise ValueError(f'{str(self.__class__)}.swap: first row index ({str(first[0])}) is out of bounds (0, {str(self.__n)}).')
+    if first[1] < 0 or first[1] >= self.__m:
+      raise ValueError(f'{str(self.__class__)}.swap: first col index ({str(first[1])}) is out of bounds (0, {str(self.__m)}).')
+    if second[0] < 0 or second[0] >= self.__n:
+      raise ValueError(f'{str(self.__class__)}.swap: second row index ({str(second[0])}) is out of bounds (0, {str(self.__n)}).')
+    if second[1] < 0 or second[1] >= self.__m:
+      raise ValueError(f'{str(self.__class__)}.swap: second col index ({str(second[1])}) is out of bounds (0, {str(self.__m)}).')
+
+    # swap the values
     tmp = self.__items[first[0] * self.__m + first[1]]
     self.__items[first[0] * self.__m + first[1]] = self.__items[second[0] * self.__m + second[1]]
     self.__items[second[0] * self.__m + second[1]] = tmp
