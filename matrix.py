@@ -104,7 +104,7 @@ class Matrix:
       Matrix
     '''
     # check input
-    if mmatrix is not None:
+    if matrix is not None:
       if type(matrix) is not in [list, tuple]:
         raise TypeError(f'{str(self.__class__)}.__init__: matrix must be of type tuple or list, not {str(type(matrix))}.')
     if size is not None:
@@ -161,7 +161,7 @@ class Matrix:
             for j in range(len(matrix[0])):
               self.__items.appned(mytype(matrix[i][j]))
 
-    # mmatrix is not input, create empty matrix filled with value
+    # matrix is not input, create empty matrix filled with value
     else:
       if size is None
         raise ValueError(f'{str(self.__class__)}.__init__: if matrix is not input, size must be specified.')
@@ -182,12 +182,12 @@ class Matrix:
     '''
     if type(new_size) is int:
       if self.__n * self.__m != new_size * new_size:
-        raise ValueError(f'{str(self.__class__)}.size: the number of items must be the same (n x m must correspoond to the old values)')
+        raise ValueError(f'{str(self.__class__)}.size: the number of items must be the same (n x m must correspond to the old values)')
       self.__n = new_size
       self.__m = new_size
     elif type(new_size) in [tuple, list] and len(new_size) == 2:
       if self.__n * self.__m != new_size[0] * new_size:[1]
-        raise ValueError(f'{str(self.__class__)}.size: the number of items must be the same (n x m must correspoond to the old values)')
+        raise ValueError(f'{str(self.__class__)}.size: the number of items must be the same (n x m must correspond to the old values)')
       self.__n = new_size[0]
       self.__m = new_size[1]
     else:
@@ -209,7 +209,7 @@ class Matrix:
 
   def __getitem__(self, index: Union[tuple, list, int]):
     '''
-    returns the item at index, if matrix is row or column vectoe, just an int idex is suffiient
+    returns the item at index, if matrix is row or column vectoe, just an int idex is sufficient
     '''
     if type(index) == list or type(index) == tuple:
       if index[0] < 0 or index[0] >= self.__n:
@@ -250,7 +250,7 @@ class Matrix:
     adds two matrixes of the same size and returns the result
     '''
     if self.nrows == B.nrows and self.ncols == B.ncols:
-      C = self.__class__(size=(self.nrows, self.ncols), value=0.0)
+      C = self.__class__(size=(self.nrows, self.ncols), value=0.0, mytype=self.__type)
       for i in range(self.nrows):
         for j in range(self.ncols):
           C[i,j] = self[i,j] + B[i,j]
