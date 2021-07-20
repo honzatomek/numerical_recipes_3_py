@@ -501,14 +501,27 @@ class Matrix:
     if type(r) is not int:
       raise TypeError(f'{str(self.__class__)}.row: row index must be of type int, not {str(type(r))}.')
     if r < 0 or r >= self.__n:
-      raise ValueError(f'{str(self.__class__)}.row: row index ({str(row)}) out of bounds (0, {str(self.__n - 1)}).')
+      raise ValueError(f'{str(self.__class__)}.row: row index ({str(r)}) out of bounds (0, {str(self.__n - 1)}).')
     return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n], size=(1, self.__m))
 
-  def col(self, c):
+  def col(self, c: int) -> Matrix:
+    '''
+    Returns a column as a new Matrix
+    In:
+      c    column index
+    Out:
+      col  a column Matrix
+    '''
+    # check bounds
+    if type(c) is not int:
+      raise TypeError(f'{str(self.__class__)}.col: col index must be of type int, not {str(type(c))}.')
+    if c < 0 or c >= self.__m:
+      raise ValueError(f'{str(self.__class__)}.col: col index ({str(c)}) out of bounds (0, {str(self.__m - 1)}).')
+
     column = list()
     for i in range(self.__n):
       column.append([self.__items[i * self.__m + c]])
-    return self.__class__(column)
+    return self.__class__(column, size=(self.__n, 1))
 
   def transpose(self):
     items = list()
