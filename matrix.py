@@ -524,6 +524,9 @@ class Matrix:
     return self.__class__(column, size=(self.__n, 1))
 
   def transpose(self):
+    '''
+    Transposes the Matrix in place
+    '''
     items = list()
     for j in range(self.__m):
       for i in range(self.__n):
@@ -534,7 +537,10 @@ class Matrix:
     self.__m = tmp
 
   @property
-  def T(self):
+  def T(self) -> Matrix:
+    '''
+    returns the transpose of the matrix
+    '''
     B = deepcopy(self)
     B.transpose()
     return B
