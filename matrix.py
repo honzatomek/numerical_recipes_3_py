@@ -476,21 +476,33 @@ class Matrix:
         raise TypeError(f'{str(self.__class__)}.swap: supplied second index is an int and Matrix is not a vector.')
     # check bounds
     if first[0] < 0 or first[0] >= self.__n:
-      raise ValueError(f'{str(self.__class__)}.swap: first row index ({str(first[0])}) is out of bounds (0, {str(self.__n)}).')
+      raise ValueError(f'{str(self.__class__)}.swap: first row index ({str(first[0])}) is out of bounds (0, {str(self.__n - 1)}).')
     if first[1] < 0 or first[1] >= self.__m:
-      raise ValueError(f'{str(self.__class__)}.swap: first col index ({str(first[1])}) is out of bounds (0, {str(self.__m)}).')
+      raise ValueError(f'{str(self.__class__)}.swap: first col index ({str(first[1])}) is out of bounds (0, {str(self.__m - 1)}).')
     if second[0] < 0 or second[0] >= self.__n:
-      raise ValueError(f'{str(self.__class__)}.swap: second row index ({str(second[0])}) is out of bounds (0, {str(self.__n)}).')
+      raise ValueError(f'{str(self.__class__)}.swap: second row index ({str(second[0])}) is out of bounds (0, {str(self.__n - 1)}).')
     if second[1] < 0 or second[1] >= self.__m:
-      raise ValueError(f'{str(self.__class__)}.swap: second col index ({str(second[1])}) is out of bounds (0, {str(self.__m)}).')
+      raise ValueError(f'{str(self.__class__)}.swap: second col index ({str(second[1])}) is out of bounds (0, {str(self.__m - 1)}).')
 
     # swap the values
     tmp = self.__items[first[0] * self.__m + first[1]]
     self.__items[first[0] * self.__m + first[1]] = self.__items[second[0] * self.__m + second[1]]
     self.__items[second[0] * self.__m + second[1]] = tmp
 
-  def row(self, r):
-    return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n])
+  def row(self, r: int) -> Matrix:
+    '''
+    Returns a row as a new Matrix
+    In:
+      r    row index
+    Out:
+      row  a row Matrix
+    '''
+    # check bounds
+    if type(r) is not int:
+      raise TypeError(f'{str(self.__class__)}.row: row index must be of type int, not {str(type(r))}.')
+    if r < 0 or r >= self.__n:
+      raise ValueError(f'{str(self.__class__)}.row: row index ({str(row)}) out of bounds (0, {str(self.__n - 1)}).')
+    return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n], size=(1, self.__m))
 
   def col(self, c):
     column = list()
