@@ -502,7 +502,7 @@ class Matrix:
       raise TypeError(f'{str(self.__class__)}.row: row index must be of type int, not {str(type(r))}.')
     if r < 0 or r >= self.__n:
       raise ValueError(f'{str(self.__class__)}.row: row index ({str(r)}) out of bounds (0, {str(self.__n - 1)}).')
-    return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n], size=(1, self.__m))
+    return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n], size=(1, self.__m), mytype=self.__type)
 
   def col(self, c: int) -> Matrix:
     '''
@@ -521,7 +521,7 @@ class Matrix:
     column = list()
     for i in range(self.__n):
       column.append([self.__items[i * self.__m + c]])
-    return self.__class__(column, size=(self.__n, 1))
+    return self.__class__(column, size=(self.__n, 1), mytype=self.__type)
 
   def transpose(self):
     '''
