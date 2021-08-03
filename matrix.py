@@ -17,7 +17,7 @@ class Matrix:
   '''
 
   @classmethod
-  def eye(cls, size: int = 0, mytype: type = float) -> Matrix:
+  def eye(cls, size: int = 0, mytype: type = float):
     '''
     returns square identity matrix of specified size and type
     In:
@@ -43,7 +43,7 @@ class Matrix:
     return cls(values, mytype=mytype)
 
   @classmethod
-  def permutation(cls, size: int = 0, i1: Union[tuple, list, int] = (0), i2: Union[tuple, list, int] = (0)) -> Matrix:
+  def permutation(cls, size: int = 0, i1: Union[tuple, list, int] = (0), i2: Union[tuple, list, int] = (0)):
     '''
     returns square permutation matrix of specified size (to swap rows use left-multiply, to swap columns use right multiply)
     if A' is martix with row permutations, then
@@ -53,7 +53,7 @@ class Matrix:
 
     In:
       size    size of resulting square matrix int >= 0 (default = 0)
-      i1      indexes of rows or coluns to be swapped (tuple or list of ints or int), zero based
+      i1      indexes of rows or columns to be swapped (tuple or list of ints or int), zero based
       i2      indexes of rows or columns to swap for (tuple or list of ints or int), zero based
     Out:
       P       Permutation matrix of size size
@@ -73,7 +73,7 @@ class Matrix:
         raise ValueError(f'{str(cls)}.permutation: lenght of i1 and i2 must be the same, not len(i1) = {str(len(i1))} and len(i2) = {str(len(i2))}')
       elif len(i1) > size:
         raise ValueError(f'{str(cls)}.permutation: lenght of i1 and i2 must be <= size ({str(size)}), not len(i1) = {str(len(i1))} and len(i2) = {str(len(i2))}')
-      elif type(i1[0]) is not int or type(i2[0]) is not list:
+      elif type(i1[0]) is not int or type(i2[0]) is not int:
         raise TypeError(f'{str(cls)}.permutation: type of i1 and i2 must be tuple or a list of ints or an int, not type(i1[0]) = {str(type(i1[0]))} and type(i2[0]) = {str(type(i2[0]))}')
     if type(i1) == int and type(i2) == int:
       i1 = [i1]
@@ -89,7 +89,7 @@ class Matrix:
 
     return P
 
-  def __init__(self, matrix: Union[list, tuple, Matrix] = None, size: Union[tuple, list, int] = None, value=None, mytype: type = float) -> Matrix:
+  def __init__(self, matrix: Union[list, tuple] = None, size: Union[tuple, list, int] = None, value=None, mytype: type = float):
     '''
     matrix constructor
     In:
@@ -105,15 +105,15 @@ class Matrix:
     '''
     # check input
     if matrix is not None:
-      if type(matrix) is not in [list, tuple]:
+      if type(matrix) not in [list, tuple]:
         raise TypeError(f'{str(self.__class__)}.__init__: matrix must be of type tuple or list, not {str(type(matrix))}.')
     if size is not None:
-      if size is not in [tuple, list, int]:
+      if size not in [tuple, list, int]:
         raise TypeError(f'{str(self.__class__)}.__init__: size must be of type tuple or list or int, not {str(type(size))}.')
-      elif size is in [tuple, list]:
+      elif size in [tuple, list]:
         if len(size) != 2:
           raise ValueError(f'{str(self.__class__)}.__init__: size must be a tuple or list of len 2, not {str(len(size))}.')
-        elif type((size[0]) is not int or type(size[1]) is not int or size[0] < 0 or size[1] < 0:
+        elif type(size[0]) is not int or type(size[1]) is not int or size[0] < 0 or size[1] < 0:
           raise ValueError(f'{str(self.__class__)}.__init__: size must be a tuple or list of ints >= 0, not ({str(size[0])}, {str(size[1])}).')
       elif type(size) is int and size < 0:
         raise ValueError(f'{str(self.__class__)}.__init__: size must be an int >= 0, not {str(size)}.')
@@ -144,7 +144,7 @@ class Matrix:
       # is matrix is list or tuple
       else:
         # matrix is one-dimensional
-        if type(matrix[0]) is not in [tuple, list]:
+        if type(matrix[0]) not in [tuple, list]:
           # size is specified?
           if size is None:
             self.__n = 1
@@ -159,11 +159,11 @@ class Matrix:
             self.__m = len(matrix[0])
           for i in range(len(matrix)):
             for j in range(len(matrix[0])):
-              self.__items.appned(mytype(matrix[i][j]))
+              self.__items.append(mytype(matrix[i][j]))
 
     # matrix is not input, create empty matrix filled with value
     else:
-      if size is None
+      if size is None:
         raise ValueError(f'{str(self.__class__)}.__init__: if matrix is not input, size must be specified.')
       for i in range(self.__n):
         self.__items.extend([value for j in range(size.__m)])
@@ -186,7 +186,7 @@ class Matrix:
       self.__n = new_size
       self.__m = new_size
     elif type(new_size) in [tuple, list] and len(new_size) == 2:
-      if self.__n * self.__m != new_size[0] * new_size:[1]
+      if (self.__n * self.__m) != (new_size[0] * new_size[1]):
         raise ValueError(f'{str(self.__class__)}.size: the number of items must be the same (n x m must correspond to the old values)')
       self.__n = new_size[0]
       self.__m = new_size[1]
@@ -209,19 +209,19 @@ class Matrix:
 
   def __getitem__(self, index: Union[tuple, list, int]):
     '''
-    returns the item at index, if matrix is row or column vectoe, just an int idex is sufficient
+    returns the item at index, if matrix is row or column vector, just an int idex is sufficient
     '''
     if type(index) == list or type(index) == tuple:
       if index[0] < 0 or index[0] >= self.__n:
-        raise ValueError(f'{str(self.__class__)}.__getitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index[0])}.'
+        raise ValueError(f'{str(self.__class__)}.__getitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index[0])}.')
       if index[1] < 0 or index[1] >= self.__m:
-        raise ValueError(f'{str(self.__class__)}.__getitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index[1])}.'
+        raise ValueError(f'{str(self.__class__)}.__getitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index[1])}.')
       return self.__items[index[0] * self.__m + index[1]]
     elif self.__n == 1 or self.__m == 1:
       if self.__n == 1 and (index < 0 or index >= self.__m):
-        raise ValueError(f'{str(self.__class__)}.__getitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index)}.'
+        raise ValueError(f'{str(self.__class__)}.__getitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index)}.')
       if self.__m == 1 and (index < 0 or index >= self.__n):
-        raise ValueError(f'{str(self.__class__)}.__getitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index)}.'
+        raise ValueError(f'{str(self.__class__)}.__getitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index)}.')
       return self.__items[index]
     else:
       raise TypeError(f'{str(self.__class__)}.__getitem__: index must be of type int or tuple or list of two ints, not {str(type(index))}.')
@@ -232,20 +232,20 @@ class Matrix:
     '''
     if type(index) == list or type(index) == tuple:
       if index[0] < 0 or index[0] >= self.__n:
-        raise ValueError(f'{str(self.__class__)}.__setitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index[0])}.'
+        raise ValueError(f'{str(self.__class__)}.__setitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index[0])}.')
       if index[1] < 0 or index[1] >= self.__m:
-        raise ValueError(f'{str(self.__class__)}.__setitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index[1])}.'
+        raise ValueError(f'{str(self.__class__)}.__setitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index[1])}.')
       self.__items[index[0] * self.__m + index[1]] = self.__type(new_value)
     elif self.__n == 1 or self.__m == 1:
       if self.__n == 1 and (index < 0 or index >= self.__m):
-        raise ValueError(f'{str(self.__class__)}.__setitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index)}.'
+        raise ValueError(f'{str(self.__class__)}.__setitem__: column index must be between (0, {str(self.__m - 1)}), not {str(index)}.')
       if self.__m == 1 and (index < 0 or index >= self.__n):
-        raise ValueError(f'{str(self.__class__)}.__setitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index)}.'
+        raise ValueError(f'{str(self.__class__)}.__setitem__: row index must be between (0, {str(self.__n - 1)}), not {str(index)}.')
       self.__items[index] = self.__type(new_value)
     else:
       raise TypeError(f'{str(self.__class__)}.__setitem__: index must be of type int or tuple or list of two ints, not {str(type(index))}.')
 
-  def __add__(self, B: Matrix):
+  def __add__(self, B):
     '''
     adds two matrixes of the same size and returns the result
     '''
@@ -271,12 +271,12 @@ class Matrix:
     else:
       raise ValueError(f'{str(self.__class__)}.__sub__: matrix B has to have the same amount of rows and columns')
 
-  def __mul__(self, B: Union[int, float, Matrix]):
+  def __mul__(self, B: Union[int, float]):
     '''
     right multiplies the matrix by an int, float or a matrix
     '''
     A = self
-    if type(B) is in [int, float]:
+    if type(B) in [int, float]:
       C = self.__class__(size=(A.nrows,A.ncols), value=0.0)
       for i in range(A.nrows):
         for j in range(A.ncols):
@@ -290,7 +290,7 @@ class Matrix:
             C[i,k] += A[i,j] * B[j,k]
       return C
     else:
-      raise ValueError(f'{str(self.__class__))}.__mul__: matrix B has to have the same amount of rows as A has columns.')
+      raise ValueError(f'{str(self.__class__)}.__mul__: matrix B has to have the same amount of rows as A has columns.')
 
   def __iadd__(self, B):
     '''
@@ -302,7 +302,7 @@ class Matrix:
           self[i,j] += B[i,j]
       return self
     else:
-      raise ValueError(f'{str(self.__class__))}.__iadd__: matrix B has to have the same amount of rows and columns.')
+      raise ValueError(f'{str(self.__class__)}.__iadd__: matrix B has to have the same amount of rows and columns.')
 
   def __isub__(self, B):
     '''
@@ -314,7 +314,7 @@ class Matrix:
           self[i,j] -= B[i,j]
       return self
     else:
-      raise ValueError(f'{str(self.__class__))}.__isub__: matrix B has to have the same amount of rows and columns')
+      raise ValueError(f'{str(self.__class__)}.__isub__: matrix B has to have the same amount of rows and columns')
 
   def __imul__(self, B):
     '''
@@ -362,7 +362,7 @@ class Matrix:
         raise ValueError(f'{str(self.__class__)}.swap_rows: a must have the same number of values as matrix rows.')
       for i in range(len(a)):
         if type(a[i]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(k)}] must be of type int, not {str(type(a[k])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(k)}] must be of type int, not {str(type(a[k]))}.')
         if a[i] != i:
           for j in range(self.__m):
             tmp = self.__items[i * self.__m + j]
@@ -388,9 +388,9 @@ class Matrix:
 
       for i in range(len(a)):
         if type(a[i]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(i)}] must be of type int, not {str(type(a[i])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_rows: a[{str(i)}] must be of type int, not {str(type(a[i]))}.')
         if type(b[i]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_rows: b[{str(i)}] must be of type int, not {str(type(b[i])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_rows: b[{str(i)}] must be of type int, not {str(type(b[i]))}.')
         for j in range(self.__m):
           tmp = self.__items[a[i] * self.__m + j]
           self.__items[a[i] * self.__m + j] = self.__items[b[i] * self.__m + j]
@@ -418,7 +418,7 @@ class Matrix:
         raise ValueError(f'{str(self.__class__)}.swap_cols: a must have the same number of values as matrix cols.')
       for j in range(len(a)):
         if type(a[j]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j]))}.')
         if a[j] != j:
           for i in range(self.__n):
             tmp = self.__items[i * self.__m + j]
@@ -444,9 +444,9 @@ class Matrix:
 
       for j in range(len(a)):
         if type(a[j]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_cols: a[{str(j)}] must be of type int, not {str(type(a[j]))}.')
         if type(b[j]) is not int:
-          raise ValueError(f'{str(self.__class__)}.swap_cols: b[{str(j)}] must be of type int, not {str(type(b[j])}.')
+          raise ValueError(f'{str(self.__class__)}.swap_cols: b[{str(j)}] must be of type int, not {str(type(b[j]))}.')
         for i in range(self.__n):
           tmp = self.__items[i * self.__m + a[j]]
           self.__items[i * self.__m + a[j]] = self.__items[i * self.__m + b[j]]
@@ -489,7 +489,7 @@ class Matrix:
     self.__items[first[0] * self.__m + first[1]] = self.__items[second[0] * self.__m + second[1]]
     self.__items[second[0] * self.__m + second[1]] = tmp
 
-  def row(self, r: int) -> Matrix:
+  def row(self, r: int):
     '''
     Returns a row as a new Matrix
     In:
@@ -504,7 +504,7 @@ class Matrix:
       raise ValueError(f'{str(self.__class__)}.row: row index ({str(r)}) out of bounds (0, {str(self.__n - 1)}).')
     return self.__class__(self.__items[r * self.__m: r * self.__m + self.__n], size=(1, self.__m), mytype=self.__type)
 
-  def col(self, c: int) -> Matrix:
+  def col(self, c: int):
     '''
     Returns a column as a new Matrix
     In:
@@ -537,7 +537,7 @@ class Matrix:
     self.__m = tmp
 
   @property
-  def T(self) -> Matrix:
+  def T(self):
     '''
     returns the transpose of the matrix
     '''
